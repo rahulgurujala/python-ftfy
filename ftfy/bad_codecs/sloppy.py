@@ -118,9 +118,6 @@ def make_sloppy_codec(encoding):
     decoding_table = "".join(sloppy_chars)
     encoding_table = codecs.charmap_build(decoding_table)
 
-    # Now produce all the class boilerplate. Look at the Python source for
-    # `encodings.cp1252` for comparison; this is almost exactly the same,
-    # except I made it follow pep8.
     class Codec(codecs.Codec):
         def encode(self, input, errors="strict"):
             return codecs.charmap_encode(input, errors, encoding_table)
@@ -143,7 +140,7 @@ def make_sloppy_codec(encoding):
         pass
 
     return codecs.CodecInfo(
-        name="sloppy-" + encoding,
+        name=f"sloppy-{encoding}",
         encode=Codec().encode,
         decode=Codec().decode,
         incrementalencoder=IncrementalEncoder,
@@ -157,12 +154,14 @@ def make_sloppy_codec(encoding):
 # can be used by the main module of ftfy.bad_codecs.
 CODECS = {}
 INCOMPLETE_ENCODINGS = (
-    ["windows-%s" % num for num in range(1250, 1259)]
-    + ["iso-8859-%s" % num for num in (3, 6, 7, 8, 11)]
-    + ["cp%s" % num for num in range(1250, 1259)]
-    + ["cp874"]
-)
+    (
+        [f"windows-{num}" for num in range(1250, 1259)]
+        + [f"iso-8859-{num}" for num in (3, 6, 7, 8, 11)]
+    )
+    + [f"cp{num}" for num in range(1250, 1259)]
+) + ["cp874"]
+
 
 for _encoding in INCOMPLETE_ENCODINGS:
-    _new_name = normalize_encoding("sloppy-" + _encoding)
+    _new_name = normalize_encoding(f"sloppy-{_encoding}")
     CODECS[_new_name] = make_sloppy_codec(_encoding)

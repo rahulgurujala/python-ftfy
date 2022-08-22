@@ -64,14 +64,14 @@ def _build_html_entities():
     # been case-folded to uppercase, such as decoding &NTILDE; as "Ñ".
     for name, char in html.entities.html5.items():
         if name.endswith(";"):
-            entities["&" + name] = char
+            entities[f"&{name}"] = char
 
             # Restrict the set of characters we can attempt to decode if their
             # name has been uppercased. If we tried to handle all entity names,
             # the results would be ambiguous.
             if name == name.lower():
                 name_upper = name.upper()
-                entity_upper = "&" + name_upper
+                entity_upper = f"&{name_upper}"
                 if html.unescape(entity_upper) == entity_upper:
                     entities[entity_upper] = char.upper()
     return entities
@@ -98,20 +98,18 @@ def _build_control_char_mapping():
     See :func:`ftfy.fixes.remove_control_chars` for a description of these
     codepoint ranges and why they should be removed.
     """
-    control_chars = {}
-
-    for i in itertools.chain(
-        range(0x00, 0x09),
-        [0x0B],
-        range(0x0E, 0x20),
-        [0x7F],
-        range(0x206A, 0x2070),
-        [0xFEFF],
-        range(0xFFF9, 0xFFFD),
-    ):
-        control_chars[i] = None
-
-    return control_chars
+    return {
+        i: None
+        for i in itertools.chain(
+            range(0x09),
+            [0x0B],
+            range(0x0E, 0x20),
+            [0x7F],
+            range(0x206A, 0x2070),
+            [0xFEFF],
+            range(0xFFF9, 0xFFFD),
+        )
+    }
 
 
 CONTROL_CHARS = _build_control_char_mapping()
