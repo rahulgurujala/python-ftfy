@@ -77,10 +77,7 @@ def _unescape_fixup(match):
 
         # If html.unescape only decoded part of the string, that's not what
         # we want. The semicolon should be consumed.
-        if ";" in unescaped:
-            return text
-        else:
-            return unescaped
+        return text if ";" in unescaped else unescaped
     else:
         return text
 

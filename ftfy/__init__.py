@@ -335,12 +335,7 @@ def fix_and_explain(
     if config.unescape_html == "auto" and "<" in text:
         config = config._replace(unescape_html=False)
 
-    if config.explain:
-        steps: Optional[List[Tuple[str, str]]] = []
-    else:
-        # If explanations aren't desired, `steps` will be None
-        steps = None
-
+    steps = [] if config.explain else None
     while True:
         origtext = text
 
@@ -429,7 +424,7 @@ def _fix_encoding_one_step_and_explain(
     if config is None:
         config = TextFixerConfig()
 
-    if len(text) == 0:
+    if not text:
         return ExplainedText(text, [])
 
     # The first plan is to return ASCII text unchanged, as well as text
@@ -499,17 +494,16 @@ def _fix_encoding_one_step_and_explain(
             # This text is in the intersection of Latin-1 and
             # Windows-1252, so it's probably legit.
             return ExplainedText(text, [])
-        else:
-            # Otherwise, it means we have characters that are in Latin-1 but
-            # not in Windows-1252. Those are C1 control characters. Nobody
-            # wants those. Assume they were meant to be Windows-1252.
-            try:
-                fixed = text.encode("latin-1").decode("windows-1252")
-                if fixed != text:
-                    steps = [("encode", "latin-1"), ("decode", "windows-1252")]
-                    return ExplainedText(fixed, steps)
-            except UnicodeDecodeError:
-                pass
+        # Otherwise, it means we have characters that are in Latin-1 but
+        # not in Windows-1252. Those are C1 control characters. Nobody
+        # wants those. Assume they were meant to be Windows-1252.
+        try:
+            fixed = text.encode("latin-1").decode("windows-1252")
+            if fixed != text:
+                steps = [("encode", "latin-1"), ("decode", "windows-1252")]
+                return ExplainedText(fixed, steps)
+        except UnicodeDecodeError:
+            pass
 
     # Fix individual characters of Latin-1 with a less satisfying explanation
     if config.fix_c1_controls and chardata.C1_CONTROL_RE.search(text):
@@ -693,9 +687,9 @@ def apply_plan(text: str, plan: List[Tuple[str, str]]):
             if encoding in FIXERS:
                 obj = FIXERS[encoding](obj)
             else:
-                raise ValueError("Unknown function to apply: %s" % encoding)
+                raise ValueError(f"Unknown function to apply: {encoding}")
         else:
-            raise ValueError("Unknown plan step: %s" % operation)
+            raise ValueError(f"Unknown plan step: {operation}")
 
     return obj
 

@@ -46,8 +46,9 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="ftfy (fixes text for you), version %s" % __version__
+        description=f"ftfy (fixes text for you), version {__version__}"
     )
+
     parser.add_argument(
         "filename",
         default="-",
@@ -94,17 +95,8 @@ def main():
 
     args = parser.parse_args()
 
-    encoding = args.encoding
-    if args.guess:
-        encoding = None
-
-    if args.filename == "-":
-        # Get a standard input stream made of bytes, so we can decode it as
-        # whatever encoding is necessary.
-        file = sys.stdin.buffer
-    else:
-        file = open(args.filename, "rb")
-
+    encoding = None if args.guess else args.encoding
+    file = sys.stdin.buffer if args.filename == "-" else open(args.filename, "rb")
     if args.output == "-":
         outfile = sys.stdout
     else:
@@ -117,11 +109,7 @@ def main():
     if normalization.lower() == "none":
         normalization = None
 
-    if args.preserve_entities:
-        unescape_html = False
-    else:
-        unescape_html = "auto"
-
+    unescape_html = False if args.preserve_entities else "auto"
     config = TextFixerConfig(unescape_html=unescape_html, normalization=normalization)
 
     try:
